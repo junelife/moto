@@ -152,12 +152,22 @@ def test_create_duplicate_platform_endpoint():
         Attributes={"Enabled": "false"},
     )
 
-    endpoint = conn.create_platform_endpoint.when.called_with(
+    # Error should only occur if the endpoint has custom user data
+    # which conflicts with data on an existing endpoint.
+    bad_endpoint = conn.create_platform_endpoint.when.called_with(
+        PlatformApplicationArn=application_arn,
+        Token="some_unique_id",
+        CustomUserData="different user data",
+        Attributes={"Enabled": "false"},
+    ).should.throw(ClientError)
+
+    # Verify that it is idempotent (when called with identical custom user data).
+    endpoint2 = conn.create_platform_endpoint(
         PlatformApplicationArn=application_arn,
         Token="some_unique_id",
         CustomUserData="some user data",
         Attributes={"Enabled": "false"},
-    ).should.throw(ClientError)
+    ).should.equal(endpoint)
 
 
 @mock_sns
