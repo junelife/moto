@@ -584,14 +584,25 @@ class SNSBackend(BaseBackend):
     def create_platform_endpoint(
         self, region, application, custom_user_data, token, attributes
     ):
-        if any(
-            token == endpoint.token for endpoint in self.platform_endpoints.values()
-        ):
-            raise DuplicateSnsEndpointError("Duplicate endpoint token: %s" % token)
-        platform_endpoint = PlatformEndpoint(
-            region, application, custom_user_data, token, attributes
-        )
-        self.platform_endpoints[platform_endpoint.arn] = platform_endpoint
+        existing = next(iter([
+            endpoint
+            for endpoint in self.platform_endpoints.values()
+            if token == endpoint.token
+        ]), None)
+
+        if existing is not None:
+            if existing.custom_user_data == custom_user_data:
+                platform_endpoint = existing
+            else:
+                # Maintain previous exception.  Should be checked against
+                # actual boto behavior.
+                raise DuplicateSnsEndpointError(
+                    "Duplicate endpoint token: %s" % token)
+        else:
+            platform_endpoint = PlatformEndpoint(
+                region, application, custom_user_data, token, attributes
+            )
+            self.platform_endpoints[platform_endpoint.arn] = platform_endpoint
         return platform_endpoint
 
     def list_endpoints_by_platform_application(self, application_arn):
