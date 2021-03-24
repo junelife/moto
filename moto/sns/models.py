@@ -594,10 +594,11 @@ class SNSBackend(BaseBackend):
             if existing.custom_user_data == custom_user_data:
                 platform_endpoint = existing
             else:
-                # Maintain previous exception.  Should be checked against
-                # actual boto behavior.
-                raise DuplicateSnsEndpointError(
-                    "Duplicate endpoint token: %s" % token)
+                error_text = \
+                    "Invalid parameter: "\
+                    "Token Reason: Endpoint (%s) already exists with the same "\
+                    "Token, but different attributes." % existing.arn
+                raise SNSInvalidParameter(error_text)
         else:
             platform_endpoint = PlatformEndpoint(
                 region, application, custom_user_data, token, attributes
