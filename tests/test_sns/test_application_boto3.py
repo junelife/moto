@@ -154,12 +154,16 @@ def test_create_duplicate_platform_endpoint():
 
     # Error should only occur if the endpoint has custom user data
     # which conflicts with data on an existing endpoint.
-    bad_endpoint = conn.create_platform_endpoint.when.called_with(
-        PlatformApplicationArn=application_arn,
-        Token="some_unique_id",
-        CustomUserData="different user data",
-        Attributes={"Enabled": "false"},
-    ).should.throw(ClientError)
+    with pytest.raises(ClientError) as e:
+        conn.create_platform_endpoint(
+            PlatformApplicationArn=application_arn,
+            Token="some_unique_id",
+            CustomUserData="different user data",
+            Attributes={"Enabled": "false"})
+    assert str(e.value) == \
+        "An error occurred (DuplicateEndpoint) when calling the "\
+        "CreatePlatformEndpoint operation: Duplicate endpoint token: "\
+        "some_unique_id"
 
     # Verify that it is idempotent (when called with identical custom user data).
     endpoint2 = conn.create_platform_endpoint(
