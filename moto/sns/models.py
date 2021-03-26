@@ -21,7 +21,6 @@ from moto.awslambda import lambda_backends
 
 from .exceptions import (
     SNSNotFoundError,
-    DuplicateSnsEndpointError,
     SnsEndpointDisabled,
     SNSInvalidParameter,
     InvalidParameterValue,
@@ -343,12 +342,14 @@ class PlatformEndpoint(BaseModel):
 
     @property
     def arn(self):
-        return "arn:aws:sns:{region}:{AccountId}:endpoint/{platform}/{name}/{id}".format(
-            region=self.region,
-            AccountId=DEFAULT_ACCOUNT_ID,
-            platform=self.application.platform,
-            name=self.application.name,
-            id=self.id,
+        return (
+            "arn:aws:sns:{region}:{AccountId}:endpoint/{platform}/{name}/{id}".format(
+                region=self.region,
+                AccountId=DEFAULT_ACCOUNT_ID,
+                platform=self.application.platform,
+                name=self.application.name,
+                id=self.id,
+            )
         )
 
     def publish(self, message):
@@ -584,14 +585,32 @@ class SNSBackend(BaseBackend):
     def create_platform_endpoint(
         self, region, application, custom_user_data, token, attributes
     ):
-        if any(
-            token == endpoint.token for endpoint in self.platform_endpoints.values()
-        ):
-            raise DuplicateSnsEndpointError("Duplicate endpoint token: %s" % token)
-        platform_endpoint = PlatformEndpoint(
-            region, application, custom_user_data, token, attributes
+        existing = next(
+            iter(
+                [
+                    endpoint
+                    for endpoint in self.platform_endpoints.values()
+                    if token == endpoint.token
+                ]
+            ),
+            None,
         )
-        self.platform_endpoints[platform_endpoint.arn] = platform_endpoint
+
+        if existing is not None:
+            if existing.custom_user_data == custom_user_data:
+                platform_endpoint = existing
+            else:
+                error_text = (
+                    "Invalid parameter: "
+                    "Token Reason: Endpoint (%s) already exists with the same "
+                    "Token, but different attributes." % existing.arn
+                )
+                raise SNSInvalidParameter(error_text)
+        else:
+            platform_endpoint = PlatformEndpoint(
+                region, application, custom_user_data, token, attributes
+            )
+            self.platform_endpoints[platform_endpoint.arn] = platform_endpoint
         return platform_endpoint
 
     def list_endpoints_by_platform_application(self, application_arn):

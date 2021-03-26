@@ -18,13 +18,6 @@ class ResourceNotFoundError(RESTError):
         )
 
 
-class DuplicateSnsEndpointError(RESTError):
-    code = 400
-
-    def __init__(self, message):
-        super(DuplicateSnsEndpointError, self).__init__("DuplicateEndpoint", message)
-
-
 class SnsEndpointDisabled(RESTError):
     code = 400
 

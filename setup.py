@@ -32,11 +32,11 @@ def get_version():
 install_requires = [
     "boto3>=1.9.201",
     "botocore>=1.12.201",
-    "cryptography>=3.3.1",
+    "cryptography<3.4",
     "requests>=2.5",
     "xmltodict",
     "six>1.9",
-    "werkzeug",
+    "werkzeug<1.0",
     "pytz",
     "python-dateutil<3.0.0,>=2.1",
     "responses>=0.9.0",
@@ -67,6 +67,9 @@ install_requires += [
     # Indirect - Py2 works with 4.5, breaks with 4.7, but officially only supported by 4.0
     "rsa<=4.0; python_version < '3'",
     "setuptools",
+    # Update following to 44.1.1?
+    # ERROR: pip's legacy dependency resolver does not consider dependency conflicts when selecting packages. This behaviour is the source of the following dependency conflicts.
+    # moto june-1.3.17.dev requires setuptools==44.0.0, but you'll have setuptools 44.1.1 which is incompatible.
     "setuptools==44.0.0; python_version < '3'",
     "zipp",
     "zipp==0.6.0; python_version < '3'",
