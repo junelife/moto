@@ -21,7 +21,6 @@ from moto.awslambda import lambda_backends
 
 from .exceptions import (
     SNSNotFoundError,
-    DuplicateSnsEndpointError,
     SnsEndpointDisabled,
     SNSInvalidParameter,
     InvalidParameterValue,
