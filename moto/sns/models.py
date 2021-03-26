@@ -343,12 +343,14 @@ class PlatformEndpoint(BaseModel):
 
     @property
     def arn(self):
-        return "arn:aws:sns:{region}:{AccountId}:endpoint/{platform}/{name}/{id}".format(
-            region=self.region,
-            AccountId=DEFAULT_ACCOUNT_ID,
-            platform=self.application.platform,
-            name=self.application.name,
-            id=self.id,
+        return (
+            "arn:aws:sns:{region}:{AccountId}:endpoint/{platform}/{name}/{id}".format(
+                region=self.region,
+                AccountId=DEFAULT_ACCOUNT_ID,
+                platform=self.application.platform,
+                name=self.application.name,
+                id=self.id,
+            )
         )
 
     def publish(self, message):
@@ -584,20 +586,26 @@ class SNSBackend(BaseBackend):
     def create_platform_endpoint(
         self, region, application, custom_user_data, token, attributes
     ):
-        existing = next(iter([
-            endpoint
-            for endpoint in self.platform_endpoints.values()
-            if token == endpoint.token
-        ]), None)
+        existing = next(
+            iter(
+                [
+                    endpoint
+                    for endpoint in self.platform_endpoints.values()
+                    if token == endpoint.token
+                ]
+            ),
+            None,
+        )
 
         if existing is not None:
             if existing.custom_user_data == custom_user_data:
                 platform_endpoint = existing
             else:
-                error_text = \
-                    "Invalid parameter: "\
-                    "Token Reason: Endpoint (%s) already exists with the same "\
+                error_text = (
+                    "Invalid parameter: "
+                    "Token Reason: Endpoint (%s) already exists with the same "
                     "Token, but different attributes." % existing.arn
+                )
                 raise SNSInvalidParameter(error_text)
         else:
             platform_endpoint = PlatformEndpoint(

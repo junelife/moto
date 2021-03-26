@@ -159,15 +159,17 @@ def test_create_duplicate_platform_endpoint():
             PlatformApplicationArn=application_arn,
             Token="some_unique_id",
             CustomUserData="different user data",
-            Attributes={"Enabled": "false"})
+            Attributes={"Enabled": "false"},
+        )
 
     # Check for actual exception text returned by boto3:
     # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sns.html#SNS.Client.create_platform_endpoint
-    assert str(e.value) == \
-        "An error occurred (InvalidParameter) when calling the "\
-        "CreatePlatformEndpoint operation: Invalid parameter: "\
-        "Token Reason: Endpoint (%s) already exists with the "\
-        "same Token, but different attributes." % endpoint[u"EndpointArn"]
+    assert (
+        str(e.value) == "An error occurred (InvalidParameter) when calling the "
+        "CreatePlatformEndpoint operation: Invalid parameter: "
+        "Token Reason: Endpoint (%s) already exists with the "
+        "same Token, but different attributes." % endpoint["EndpointArn"]
+    )
 
     # Verify that it is idempotent (when called with identical custom user data).
     endpoint2 = conn.create_platform_endpoint(
